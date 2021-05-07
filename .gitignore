@@ -1,0 +1,3 @@
+# igonre vim swp files
+*.swp
+*.swo
