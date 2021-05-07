@@ -5193,6 +5193,7 @@ var $elm$html$Html$div = _VirtualDom_node('div');
 var $elm$html$Html$h1 = _VirtualDom_node('h1');
 var $elm$html$Html$Attributes$id = $elm$html$Html$Attributes$stringProperty('id');
 var $elm$html$Html$img = _VirtualDom_node('img');
+var $author$project$PhotoGroove$photoListUrl = 'http://elm-in-action.com/list-photos';
 var $elm$html$Html$Attributes$src = function (url) {
 	return A2(
 		$elm$html$Html$Attributes$stringProperty,
@@ -5201,7 +5202,6 @@ var $elm$html$Html$Attributes$src = function (url) {
 };
 var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
 var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
-var $author$project$PhotoGroove$urlPrefix = 'http://elm-in-action.com/';
 var $elm$core$List$filter = F2(
 	function (isGood, list) {
 		return A3(
@@ -5251,7 +5251,7 @@ var $author$project$PhotoGroove$viewThumbnail = F2(
 			_List_fromArray(
 				[
 					$elm$html$Html$Attributes$src(
-					_Utils_ap($author$project$PhotoGroove$urlPrefix, thumb.url)),
+					_Utils_ap($author$project$PhotoGroove$photoListUrl, thumb.url)),
 					$elm$html$Html$Attributes$classList(
 					_List_fromArray(
 						[
@@ -5295,7 +5295,7 @@ var $author$project$PhotoGroove$view = function (model) {
 				_List_fromArray(
 					[
 						$elm$html$Html$Attributes$class('large'),
-						$elm$html$Html$Attributes$src($author$project$PhotoGroove$urlPrefix + ('large/' + model.selectedUrl))
+						$elm$html$Html$Attributes$src($author$project$PhotoGroove$photoListUrl + ('large/' + model.selectedUrl))
 					]),
 				_List_Nil)
 			]));
