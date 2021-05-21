@@ -5234,8 +5234,18 @@ var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
 var $elm$core$Platform$Sub$batch = _Platform_batch;
 var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
+var $author$project$PhotoGroove$Errored = function (a) {
+	return {$: 'Errored', a: a};
+};
 var $author$project$PhotoGroove$GotRandomPhoto = function (a) {
 	return {$: 'GotRandomPhoto', a: a};
+};
+var $author$project$PhotoGroove$Loaded = F2(
+	function (a, b) {
+		return {$: 'Loaded', a: a, b: b};
+	});
+var $author$project$PhotoGroove$Photo = function (url) {
+	return {url: url};
 };
 var $elm$random$Random$Generate = function (a) {
 	return {$: 'Generate', a: a};
@@ -5347,10 +5357,6 @@ var $elm$random$Random$generate = F2(
 var $elm$core$Tuple$pair = F2(
 	function (a, b) {
 		return _Utils_Tuple2(a, b);
-	});
-var $author$project$PhotoGroove$Loaded = F2(
-	function (a, b) {
-		return {$: 'Loaded', a: a, b: b};
 	});
 var $author$project$PhotoGroove$selectUrl = F2(
 	function (url, status) {
@@ -5476,7 +5482,7 @@ var $author$project$PhotoGroove$update = F2(
 						model,
 						{chosenSize: size}),
 					$elm$core$Platform$Cmd$none);
-			default:
+			case 'ClickedSurpriseMe':
 				var _v1 = model.status;
 				switch (_v1.$) {
 					case 'Loaded':
@@ -5499,6 +5505,41 @@ var $author$project$PhotoGroove$update = F2(
 					default:
 						var errorMessage = _v1.a;
 						return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+				}
+			default:
+				var result = msg.a;
+				if (result.$ === 'Ok') {
+					var responseStr = result.a;
+					var _v4 = A2($elm$core$String$split, ',', responseStr);
+					if (_v4.b) {
+						var urls = _v4;
+						var firstUrl = urls.a;
+						var photos = A2($elm$core$List$map, $author$project$PhotoGroove$Photo, urls);
+						return _Utils_Tuple2(
+							_Utils_update(
+								model,
+								{
+									status: A2($author$project$PhotoGroove$Loaded, photos, firstUrl)
+								}),
+							$elm$core$Platform$Cmd$none);
+					} else {
+						return _Utils_Tuple2(
+							_Utils_update(
+								model,
+								{
+									status: $author$project$PhotoGroove$Errored('0 photos found')
+								}),
+							$elm$core$Platform$Cmd$none);
+					}
+				} else {
+					var httpError = result.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								status: $author$project$PhotoGroove$Errored('Server error!')
+							}),
+						$elm$core$Platform$Cmd$none);
 				}
 		}
 	});

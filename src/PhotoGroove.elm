@@ -5,6 +5,7 @@ import Browser
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
+import Http
 import Random
 
 
@@ -28,6 +29,7 @@ type Msg
     | ClickedSize ThumbnailSize
     | ClickedSurpriseMe
     | GotRandomPhoto Photo
+    | GotPhotos (Result Http.Error String)
 
 
 type Status
@@ -76,6 +78,21 @@ update msg model =
 
                 Errored errorMessage ->
                     ( model, Cmd.none )
+
+        GotPhotos (Ok responseStr) ->
+            case String.split "," responseStr of
+                (firstUrl :: _) as urls ->
+                    let
+                        photos =
+                            List.map Photo urls
+                    in
+                    ( { model | status = Loaded photos firstUrl }, Cmd.none )
+
+                [] ->
+                    ( { model | status = Errored "0 photos found" }, Cmd.none )
+
+        GotPhotos (Err httpError) ->
+            ( { model | status = Errored "Server error!" }, Cmd.none )
 
 
 main : Program () Model Msg
