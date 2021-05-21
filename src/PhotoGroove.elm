@@ -6,6 +6,8 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
 import Http
+import Json.Decode exposing (Decoder, int, list, string, succeed)
+import Json.Decode.Pipeline exposing (optional, required)
 import Random
 
 
@@ -21,7 +23,10 @@ type ThumbnailSize
 
 
 type alias Photo =
-    { url : String }
+    { url : String
+    , size : Int
+    , title : String
+    }
 
 
 type Msg
@@ -188,3 +193,16 @@ selectUrl url status =
 
         Errored errorMessage ->
             status
+
+
+photoDecoder : Decoder Photo
+photoDecoder =
+    succeed buildPhoto
+        |> required "url" string
+        |> required "size" int
+        |> optional "title" string "(untitled)"
+
+
+buildPhoto : String -> Int -> String -> Photo
+buildPhoto url size title =
+    { url = url, size = size, title = title }
