@@ -1,7 +1,26 @@
-<!doctype html?>
+<!DOCTYPE html?>
 <html>
 	<head>
-	    <link rel="stylesheet" href="http://elm-in-action.com/styles.css">
+		<link rel="stylesheet" href="http://elm-in-action.com/styles.css" />
+		<link rel="stylesheet" href="http://elm-in-action.com/range-slider.css">
+		<script src="http://elm-in-action.com/range-slider.js"></script>
+		<script>
+            class RangeSlider extends HTMLElement {
+                connectedCallback() {
+                    var input = document.createElement("input");
+                    this.appendChild(input);
+
+                    var jsr = new JSR(input, {
+                        max: this.max,
+                        values: [this.val],
+                        sliders: 1,
+                        grid: false
+                    });
+                }
+            }
+
+            window.customElements.define("range-slider", RangeSlider);
+		</script>
 	</head>
 
 	<body>
@@ -9,7 +28,9 @@
 
 		<script src="app.js"></script>
 		<script>
-			Elm.PhotoGroove.init({node: document.getElementById("app")});
+			Elm.PhotoGroove.init({
+				node: document.getElementById("app"),
+			});
 		</script>
 	</body>
 </html>
