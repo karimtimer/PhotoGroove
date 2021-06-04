@@ -1,16 +1,23 @@
-<!doctype html?>
+<!DOCTYPE html?>
 <html>
 	<head>
-	    <link rel="stylesheet" href="http://elm-in-action.com/styles.css">
-	    <script>
-		    class RangeSlider extends HTMLElement {
-			    connectedCallback() {
-				    var input = document.createElement("input");
-				    this.appendChild(input);
+		<link
+			rel="stylesheet"
+			href="http://elm-in-action.com/styles.css"
+		/>
+		<script>
+			class RangeSlider extends HTMLElement {
+				connectedCallback() {
+					var input =
+						document.createElement("input");
+					this.appendChild(input);
+				}
 			}
-		}
-window.customElements.define("range-slider", RangeSlider);
-	</script>
+			window.customElements.define(
+				"range-slider",
+				RangeSlider
+			);
+		</script>
 	</head>
 
 	<body>
@@ -18,7 +25,9 @@ window.customElements.define("range-slider", RangeSlider);
 
 		<script src="app.js"></script>
 		<script>
-			Elm.PhotoGroove.init({node: document.getElementById("app")});
+			Elm.PhotoGroove.init({
+				node: document.getElementById("app"),
+			});
 		</script>
 	</body>
 </html>
