@@ -2,6 +2,6 @@
 *.swo
 *.dat
 # elm-package generated files
-elm-stuff
+elm-stuff/**/*.dat
 # elm-repl generated files
 repl-temp-*
