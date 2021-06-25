@@ -1,5 +1,7 @@
-# igonre vim swp files
 *.swp
 *.swo
-elm-stuff/0.19.1/**.dat
-elm-stuff/0.19.1/**.elmo
+*.dat
+# elm-package generated files
+elm-stuff/**/*.dat
+# elm-repl generated files
+repl-temp-*
