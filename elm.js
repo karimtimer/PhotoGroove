@@ -1755,7 +1755,6 @@ function _Scheduler_kill(proc)
 
 
 /* STEP PROCESSES
-
 type alias Process =
   { $ : tag
   , id : unique_id
@@ -1763,7 +1762,6 @@ type alias Process =
   , stack : null | { $: SUCCEED | FAIL, a: callback, b: stack }
   , mailbox : [msg]
   }
-
 */
 
 
@@ -1874,19 +1872,19 @@ function _Platform_initialize(flagDecoder, args, init, update, subscriptions, st
 	var result = A2(_Json_run, flagDecoder, _Json_wrap(args ? args['flags'] : undefined));
 	$elm$core$Result$isOk(result) || _Debug_crash(2 /**/, _Json_errorToString(result.a) /**/);
 	var managers = {};
-	var initPair = init(result.a);
-	var model = initPair.a;
+	result = init(result.a);
+	var model = result.a;
 	var stepper = stepperBuilder(sendToApp, model);
 	var ports = _Platform_setupEffects(managers, sendToApp);
 
 	function sendToApp(msg, viewMetadata)
 	{
-		var pair = A2(update, msg, model);
-		stepper(model = pair.a, viewMetadata);
-		_Platform_enqueueEffects(managers, pair.b, subscriptions(model));
+		result = A2(update, msg, model);
+		stepper(model = result.a, viewMetadata);
+		_Platform_enqueueEffects(managers, result.b, subscriptions(model));
 	}
 
-	_Platform_enqueueEffects(managers, initPair.b, subscriptions(model));
+	_Platform_enqueueEffects(managers, result.b, subscriptions(model));
 
 	return ports ? { ports: ports } : {};
 }
@@ -6855,7 +6853,7 @@ var $author$project$PhotoGroove$viewLoaded = F3(
 					]),
 				_List_fromArray(
 					[
-						A3($author$project$PhotoGroove$viewFilter, $author$project$PhotoGroove$SlidHue, 'Hue', 1),
+						A3($author$project$PhotoGroove$viewFilter, $author$project$PhotoGroove$SlidHue, 'Hue', model.hue),
 						A3($author$project$PhotoGroove$viewFilter, $author$project$PhotoGroove$SlidRipple, 'Ripple', model.ripple),
 						A3($author$project$PhotoGroove$viewFilter, $author$project$PhotoGroove$SlidNoise, 'Noise', model.noise)
 					])),

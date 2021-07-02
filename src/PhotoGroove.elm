@@ -17,27 +17,6 @@ urlPrefix =
     "http://elm-in-action.com/"
 
 
-type ThumbnailSize
-    = Small
-    | Medium
-    | Large
-
-
-type alias Photo =
-    { url : String
-    , size : Int
-    , title : String
-    }
-
-
-photoDecoder : Decoder Photo
-photoDecoder =
-    succeed Photo
-        |> required "url" string
-        |> required "size" int
-        |> optional "title" string "(untitled)"
-
-
 type Msg
     = ClickedPhoto String
     | ClickedSize ThumbnailSize
@@ -47,106 +26,6 @@ type Msg
     | SlidHue Int
     | SlidRipple Int
     | SlidNoise Int
-
-
-type Status
-    = Loading
-    | Loaded (List Photo) String
-    | Errored String
-
-
-type alias Model =
-    { status : Status
-    , chosenSize : ThumbnailSize
-    , hue : Int
-    , ripple : Int
-    , noise : Int
-    }
-
-
-initialCmd : Cmd Msg
-initialCmd =
-    Http.get
-        { url = "http://elm-in-action.com/photos/list.json"
-        , expect = Http.expectJson GotPhotos (list photoDecoder)
-        }
-
-
-initialModel : Model
-initialModel =
-    { status = Loading
-    , chosenSize = Large
-    , hue = 5
-    , ripple = 5
-    , noise = 5
-    }
-
-
-update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
-    case msg of
-        ClickedPhoto url ->
-            ( { model | status = selectUrl url model.status }, Cmd.none )
-
-        GotRandomPhoto photo ->
-            ( { model | status = selectUrl photo.url model.status }, Cmd.none )
-
-        ClickedSize size ->
-            ( { model | chosenSize = size }, Cmd.none )
-
-        ClickedSurpriseMe ->
-            case model.status of
-                Loaded (firstPhoto :: otherPhotos) _ ->
-                    Random.uniform firstPhoto otherPhotos
-                        |> Random.generate GotRandomPhoto
-                        |> Tuple.pair model
-
-                Loaded [] _ ->
-                    ( model, Cmd.none )
-
-                Loading ->
-                    ( model, Cmd.none )
-
-                Errored errorMessage ->
-                    ( model, Cmd.none )
-
-        GotPhotos (Ok photos) ->
-            case photos of
-                (first :: rest) as urls ->
-                    ( { model | status = Loaded photos first.url }
-                    , Cmd.none
-                    )
-
-                [] ->
-                    ( { model | status = Errored "0 photos found" }, Cmd.none )
-
-        GotPhotos (Err httpError) ->
-            ( { model | status = Errored "Server error!" }, Cmd.none )
-
-        SlidHue hue ->
-            ( { model | hue = hue }
-            , Cmd.none
-            )
-
-        SlidRipple ripple ->
-            ( { model | ripple = ripple }
-            , Cmd.none
-            )
-
-        SlidNoise noise ->
-            ( { model | noise = noise }
-            , Cmd.none
-            )
-
-
-main : Program () Model Msg
-main =
-    Browser.element
-        { init = \_ -> ( initialModel, initialCmd )
-        , view = view
-        , update = update
-        , subscriptions = \_ -> Sub.none
-        }
 
 
 view : Model -> Html Msg
@@ -183,8 +62,8 @@ viewLoaded photos selectedUrl model =
     , button
         [ onClick ClickedSurpriseMe ]
         [ text "Surprise Me!" ]
-    , div [ class "fliters" ]
-        [ viewFilter SlidHue "Hue" model.hue
+    , div [ class "filters" ]
+        [ viewFilter SlidHue "Hue" 1
         , viewFilter SlidRipple "Ripple" model.ripple
         , viewFilter SlidNoise "Noise" model.noise
         ]
@@ -233,6 +112,103 @@ sizeToString size =
             "large"
 
 
+type alias Photo =
+    { url : String
+    , size : Int
+    , title : String
+    }
+
+
+photoDecoder : Decoder Photo
+photoDecoder =
+    succeed Photo
+        |> required "url" string
+        |> required "size" int
+        |> optional "title" string "(untitled)"
+
+
+type Status
+    = Loading
+    | Loaded (List Photo) String
+    | Errored String
+
+
+type alias Model =
+    { status : Status
+    , chosenSize : ThumbnailSize
+    , hue : Int
+    , ripple : Int
+    , noise : Int
+    }
+
+
+initialModel : Model
+initialModel =
+    { status = Loading
+    , chosenSize = Medium
+    , hue = 5
+    , ripple = 5
+    , noise = 5
+    }
+
+
+type ThumbnailSize
+    = Small
+    | Medium
+    | Large
+
+
+update : Msg -> Model -> ( Model, Cmd Msg )
+update msg model =
+    case msg of
+        GotRandomPhoto photo ->
+            ( { model | status = selectUrl photo.url model.status }, Cmd.none )
+
+        ClickedPhoto url ->
+            ( { model | status = selectUrl url model.status }, Cmd.none )
+
+        ClickedSize size ->
+            ( { model | chosenSize = size }, Cmd.none )
+
+        ClickedSurpriseMe ->
+            case model.status of
+                Loaded (firstPhoto :: otherPhotos) _ ->
+                    Random.uniform firstPhoto otherPhotos
+                        |> Random.generate GotRandomPhoto
+                        |> Tuple.pair model
+
+                Loaded [] _ ->
+                    ( model, Cmd.none )
+
+                Loading ->
+                    ( model, Cmd.none )
+
+                Errored errorMessage ->
+                    ( model, Cmd.none )
+
+        GotPhotos (Ok photos) ->
+            case photos of
+                first :: rest ->
+                    ( { model | status = Loaded photos first.url }
+                    , Cmd.none
+                    )
+
+                [] ->
+                    ( { model | status = Errored "0 photos found" }, Cmd.none )
+
+        GotPhotos (Err httpError) ->
+            ( { model | status = Errored "Server error!" }, Cmd.none )
+
+        SlidHue hue ->
+            ( { model | hue = hue }, Cmd.none )
+
+        SlidRipple ripple ->
+            ( { model | ripple = ripple }, Cmd.none )
+
+        SlidNoise noise ->
+            ( { model | noise = noise }, Cmd.none )
+
+
 selectUrl : String -> Status -> Status
 selectUrl url status =
     case status of
@@ -244,6 +220,24 @@ selectUrl url status =
 
         Errored errorMessage ->
             status
+
+
+initialCmd : Cmd Msg
+initialCmd =
+    Http.get
+        { url = "http://elm-in-action.com/photos/list.json"
+        , expect = Http.expectJson GotPhotos (list photoDecoder)
+        }
+
+
+main : Program () Model Msg
+main =
+    Browser.element
+        { init = \_ -> ( initialModel, initialCmd )
+        , view = view
+        , update = update
+        , subscriptions = \_ -> Sub.none
+        }
 
 
 rangeSlider : List (Attribute msg) -> List (Html msg) -> Html msg
