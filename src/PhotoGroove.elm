@@ -1,4 +1,4 @@
-module PhotoGroove exposing (main)
+module PhotoGroove exposing (..)
 
 import Array exposing (Array)
 import Browser
@@ -110,6 +110,15 @@ sizeToString size =
 
         Large ->
             "large"
+
+
+port setFilters : FilterOptions -> Cmd msg
+
+
+type alias FilterOptions =
+    { url : String
+    , filters : List { name : String, amount : Int }
+    }
 
 
 type alias Photo =
