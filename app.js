@@ -6281,9 +6281,14 @@ var $author$project$PhotoGroove$initialCmd = $elm$http$Http$get(
 	});
 var $author$project$PhotoGroove$Loading = {$: 'Loading'};
 var $author$project$PhotoGroove$Medium = {$: 'Medium'};
-var $author$project$PhotoGroove$initialModel = {chosenSize: $author$project$PhotoGroove$Medium, hue: 5, noise: 5, ripple: 5, status: $author$project$PhotoGroove$Loading};
-var $elm$core$Platform$Sub$batch = _Platform_batch;
-var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
+var $author$project$PhotoGroove$initialModel = {activity: '', chosenSize: $author$project$PhotoGroove$Medium, hue: 5, noise: 5, ripple: 5, status: $author$project$PhotoGroove$Loading};
+var $author$project$PhotoGroove$GotActivity = function (a) {
+	return {$: 'GotActivity', a: a};
+};
+var $author$project$PhotoGroove$activityChanges = _Platform_incomingPort('activityChanges', $elm$json$Json$Decode$string);
+var $author$project$PhotoGroove$subscriptions = function (model) {
+	return $author$project$PhotoGroove$activityChanges($author$project$PhotoGroove$GotActivity);
+};
 var $author$project$PhotoGroove$Errored = function (a) {
 	return {$: 'Errored', a: a};
 };
@@ -6590,6 +6595,13 @@ var $elm$random$Random$uniform = F2(
 var $author$project$PhotoGroove$update = F2(
 	function (msg, model) {
 		switch (msg.$) {
+			case 'GotActivity':
+				var activity = msg.a;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{activity: activity}),
+					$elm$core$Platform$Cmd$none);
 			case 'GotRandomPhoto':
 				var photo = msg.a;
 				return $author$project$PhotoGroove$applyFilters(
@@ -6741,6 +6753,7 @@ var $elm$html$Html$Events$onClick = function (msg) {
 		'click',
 		$elm$json$Json$Decode$succeed(msg));
 };
+var $elm$html$Html$p = _VirtualDom_node('p');
 var $author$project$PhotoGroove$sizeToString = function (size) {
 	switch (size.$) {
 		case 'Small':
@@ -6923,6 +6936,13 @@ var $author$project$PhotoGroove$viewLoaded = F3(
 						$elm$html$Html$text('Photo Groove')
 					])),
 				A2(
+				$elm$html$Html$p,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text(model.activity)
+					])),
+				A2(
 				$elm$html$Html$button,
 				_List_fromArray(
 					[
@@ -7014,9 +7034,7 @@ var $author$project$PhotoGroove$main = $elm$browser$Browser$element(
 		init: function (_v0) {
 			return _Utils_Tuple2($author$project$PhotoGroove$initialModel, $author$project$PhotoGroove$initialCmd);
 		},
-		subscriptions: function (_v1) {
-			return $elm$core$Platform$Sub$none;
-		},
+		subscriptions: $author$project$PhotoGroove$subscriptions,
 		update: $author$project$PhotoGroove$update,
 		view: $author$project$PhotoGroove$view
 	});
