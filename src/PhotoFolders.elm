@@ -1,4 +1,4 @@
-module PhotoFolders exposing (main)
+module PhotoFolders exposing (Model, Msg, init, update, view)
 
 import Browser
 import Dict exposing (Dict)
@@ -30,13 +30,13 @@ initialModel : Model
 initialModel =
     { selectedPhotoUrl = Nothing
     , photos = Dict.empty
-    , root = Folder { name = "Loading...", photoUrls = [], subfolders = [], expanded = True }
+    , root = Folder { name = "Loading...", photoUrls = [], expanded = True, subfolders = [] }
     }
 
 
-init : () -> ( Model, Cmd Msg )
-init _ =
-    ( initialModel
+init : Maybe String -> ( Model, Cmd Msg )
+init selectedFilename =
+    ( { initialModel | selectedPhotoUrl = selectedFilename }
     , Http.get
         { url = "http://elm-in-action.com/folders/list"
         , expect = Http.expectJson GotInitialModel modelDecoder
@@ -76,24 +76,6 @@ update msg model =
             ( model, Cmd.none )
 
 
-main : Program () Model Msg
-main =
-    Browser.element
-        { init = init
-        , view = view
-        , update = update
-        , subscriptions = \_ -> Sub.none
-        }
-
-
-type alias Photo =
-    { title : String
-    , size : Int
-    , relatedUrls : List String
-    , url : String
-    }
-
-
 view : Model -> Html Msg
 view model =
     let
@@ -119,10 +101,19 @@ view model =
         ]
 
 
+type alias Photo =
+    { title : String, size : Int, relatedUrls : List String, url : String }
+
+
+viewPhoto : String -> Html Msg
+viewPhoto url =
+    div [ class "photo", onClick (ClickedPhoto url) ]
+        [ text url ]
+
+
 viewSelectedPhoto : Photo -> Html Msg
 viewSelectedPhoto photo =
-    div
-        [ class "selected-photo" ]
+    div [ class "selected-photo" ]
         [ h2 [] [ text photo.title ]
         , img [ src (urlPrefix ++ "photos/" ++ photo.url ++ "/full") ] []
         , span [] [ text (String.fromInt photo.size ++ "KB") ]
@@ -140,12 +131,6 @@ viewRelatedPhoto url =
         , src (urlPrefix ++ "photos/" ++ url ++ "/thumb")
         ]
         []
-
-
-viewPhoto : String -> Html Msg
-viewPhoto url =
-    div [ class "photo", onClick (ClickedPhoto url) ]
-        [ text url ]
 
 
 viewFolder : FolderPath -> Folder -> Html Msg
@@ -218,10 +203,7 @@ toggleExpanded path (Folder folder) =
 
 
 type alias JsonPhoto =
-    { title : String
-    , size : Int
-    , relatedUrls : List String
-    }
+    { title : String, size : Int, relatedUrls : List String }
 
 
 jsonPhotoDecoder : Decoder JsonPhoto
@@ -252,8 +234,7 @@ fromPairs pairs =
 
 photosDecoder : Decoder (Dict String Photo)
 photosDecoder =
-    Decode.keyValuePairs jsonPhotoDecoder
-        |> Decode.map fromPairs
+    Decode.keyValuePairs jsonPhotoDecoder |> Decode.map fromPairs
 
 
 folderDecoder : Decoder Folder
@@ -278,18 +259,9 @@ modelPhotosDecoder : Decoder (Dict String Photo)
 modelPhotosDecoder =
     Decode.succeed modelPhotosFromJson
         |> required "photos" photosDecoder
-        |> required "subfolders"
-            (Decode.lazy
-                (\_ ->
-                    list
-                        modelPhotosDecoder
-                )
-            )
+        |> required "subfolders" (Decode.lazy (\_ -> list modelPhotosDecoder))
 
 
-modelPhotosFromJson :
-    Dict String Photo
-    -> List (Dict String Photo)
-    -> Dict String Photo
+modelPhotosFromJson : Dict String Photo -> List (Dict String Photo) -> Dict String Photo
 modelPhotosFromJson folderPhotos subfolderPhotos =
     List.foldl Dict.union folderPhotos subfolderPhotos
