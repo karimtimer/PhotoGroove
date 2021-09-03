@@ -1,4 +1,4 @@
-module Main exposing (main)
+module Main exposing (main, view)
 
 import Browser exposing (Document)
 import Html exposing (Html, a, footer, h1, li, nav, text, ul)
@@ -6,14 +6,35 @@ import Html.Attributes exposing (classList, href)
 
 
 type alias Model =
-    {}
+    { page : Page }
+
+
+type Page
+    = Gallery
+    | Folders
+    | NotFound
 
 
 view : Model -> Document Msg
 view model =
+    let
+        content =
+            text "This isn't even my final form!"
+    in
     { title = "Photo Groove, SPA Style"
-    , body = [ text "This isn't even my final form!" ]
+    , body =
+        [ viewHeader model.page
+        , content
+        , viewFooter
+        ]
     }
+
+
+viewFooter : Html msg
+viewFooter =
+    footer []
+        [ text "One is never alone with a rubber duck. -Douglas Adams"
+        ]
 
 
 type Msg
@@ -33,7 +54,7 @@ subscriptions model =
 main : Program () Model Msg
 main =
     Browser.document
-        { init = \_ -> ( {}, Cmd.none )
+        { init = \_ -> ( { page = Gallery }, Cmd.none )
         , subscriptions = subscriptions
         , update = update
         , view = view
