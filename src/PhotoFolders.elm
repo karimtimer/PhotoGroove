@@ -10,9 +10,18 @@ import Json.Decode as Decode exposing (Decoder, int, list, string)
 import Json.Decode.Pipeline exposing (required)
 
 
+type Folder
+    = Folder
+        { name : String
+        , photoUrls : List String
+        , subfolders : List Folder
+        }
+
+
 type alias Model =
     { selectedPhotoUrl : Maybe String
     , photos : Dict String Photo
+    , root : Folder
     }
 
 
@@ -20,6 +29,7 @@ initialModel : Model
 initialModel =
     { selectedPhotoUrl = Nothing
     , photos = Dict.empty
+    , root = Folder { name = "Loading...", photoUrls = [], subfolders = [] }
     }
 
 
@@ -61,6 +71,45 @@ modelDecoder =
                     }
                   )
                 ]
+        , root =
+            Folder
+                { name = "Photos"
+                , photoUrls = []
+                , subfolders =
+                    [ Folder
+                        { name = "2016"
+                        , photoUrls = [ "trevi", "coli" ]
+                        , subfolders =
+                            [ Folder
+                                { name = "outdoors"
+                                , photoUrls = []
+                                , subfolders = []
+                                }
+                            , Folder
+                                { name = "indoors"
+                                , photoUrls = [ "fresco" ]
+                                , subfolders = []
+                                }
+                            ]
+                        }
+                    , Folder
+                        { name = "2017"
+                        , photoUrls = []
+                        , subfolders =
+                            [ Folder
+                                { name = "outdoors"
+                                , photoUrls = []
+                                , subfolders = []
+                                }
+                            , Folder
+                                { name = "indoors"
+                                , photoUrls = []
+                                , subfolders = []
+                                }
+                            ]
+                        }
+                    ]
+                }
         }
 
 
@@ -100,6 +149,31 @@ type alias Photo =
     }
 
 
+view : Model -> Html Msg
+view model =
+    let
+        photoByUrl : String -> Maybe Photo
+        photoByUrl url =
+            Dict.get url model.photos
+
+        selectedPhoto : Html Msg
+        selectedPhoto =
+            case Maybe.andThen photoByUrl model.selectedPhotoUrl of
+                Just photo ->
+                    viewSelectedPhoto photo
+
+                Nothing ->
+                    text ""
+    in
+    div [ class "content" ]
+        [ div [ class "folders" ]
+            [ h1 [] [ text "Folders" ]
+            , viewFolder model.root
+            ]
+        , div [ class "selected-photo" ] [ selectedPhoto ]
+        ]
+
+
 viewSelectedPhoto : Photo -> Html Msg
 viewSelectedPhoto photo =
     div
@@ -123,26 +197,18 @@ viewRelatedPhoto url =
         []
 
 
+viewFolder : Folder -> Html Msg
+viewFolder (Folder folder) =
+    let
+        subfolders =
+            List.map viewFolder folder.subfolders
+    in
+    div [ class "folder" ]
+        [ label [] [ text folder.name ]
+        , div [ class "subfolders" ] subfolders
+        ]
+
+
 urlPrefix : String
 urlPrefix =
     "http://elm-in-action.com/"
-
-
-view : Model -> Html Msg
-view model =
-    let
-        photoByUrl : String -> Maybe Photo
-        photoByUrl url =
-            Dict.get url model.photos
-
-        selectedPhoto : Html Msg
-        selectedPhoto =
-            case Maybe.andThen photoByUrl model.selectedPhotoUrl of
-                Just photo ->
-                    viewSelectedPhoto photo
-
-                Nothing ->
-                    text ""
-    in
-    div [ class "content" ]
-        [ div [ class "selected-photo" ] [ selectedPhoto ] ]
