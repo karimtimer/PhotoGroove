@@ -328,7 +328,7 @@ folderDecoder =
     Decode.succeed folderFromJson
         |> required "name" string
         |> required "photos" photosDecoder
-        |> required "subfolders" (list folderDecoder)
+        |> required "subfolders" (Decode.lazy (\_ -> list folderDecoder))
 
 
 folderFromJson : String -> Dict String Photo -> List Folder -> Folder
@@ -339,3 +339,24 @@ folderFromJson name photos subfolders =
         , subfolders = subfolders
         , photoUrls = Dict.keys photos
         }
+
+
+modelPhotosDecoder : Decoder (Dict String Photo)
+modelPhotosDecoder =
+    Decode.succeed modelPhotosFromJson
+        |> required "photos" photosDecoder
+        |> required "subfolders"
+            (Decode.lazy
+                (\_ ->
+                    list
+                        modelPhotosDecoder
+                )
+            )
+
+
+modelPhotosFromJson :
+    Dict String Photo
+    -> List (Dict String Photo)
+    -> Dict String Photo
+modelPhotosFromJson folderPhotos subfolderPhotos =
+    List.foldl Dict.union folderPhotos subfolderPhotos
