@@ -6402,12 +6402,12 @@ var $author$project$PhotoFolders$init = function (selectedFilename) {
 			}));
 };
 var $elm$core$String$fromFloat = _String_fromNumber;
-var $author$project$PhotoGallery$LoadedThumbnails = function (a) {
-	return {$: 'LoadedThumbnails', a: a};
+var $author$project$PhotoGallery$GotPhotos = function (a) {
+	return {$: 'GotPhotos', a: a};
 };
-var $author$project$PhotoGallery$Thumbnail = F3(
-	function (fileName, size, title) {
-		return {fileName: fileName, size: size, title: title};
+var $author$project$PhotoGallery$Photo = F3(
+	function (url, size, title) {
+		return {size: size, title: title, url: url};
 	});
 var $elm$json$Json$Decode$decodeValue = _Json_run;
 var $elm$json$Json$Decode$fail = _Json_fail;
@@ -6457,11 +6457,11 @@ var $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional = F4(
 				fallback),
 			decoder);
 	});
-var $author$project$PhotoGallery$thumbnailDecoder = A4(
+var $author$project$PhotoGallery$photoDecoder = A4(
 	$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
 	'title',
 	$elm$json$Json$Decode$string,
-	'untitled',
+	'(untitled)',
 	A3(
 		$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
 		'size',
@@ -6470,20 +6470,20 @@ var $author$project$PhotoGallery$thumbnailDecoder = A4(
 			$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
 			'url',
 			$elm$json$Json$Decode$string,
-			$elm$json$Json$Decode$succeed($author$project$PhotoGallery$Thumbnail))));
+			$elm$json$Json$Decode$succeed($author$project$PhotoGallery$Photo))));
 var $author$project$PhotoGallery$initialCmd = $elm$http$Http$get(
 	{
 		expect: A2(
 			$elm$http$Http$expectJson,
-			$author$project$PhotoGallery$LoadedThumbnails,
-			$elm$json$Json$Decode$list($author$project$PhotoGallery$thumbnailDecoder)),
+			$author$project$PhotoGallery$GotPhotos,
+			$elm$json$Json$Decode$list($author$project$PhotoGallery$photoDecoder)),
 		url: 'http://elm-in-action.com/photos/list.json'
 	});
-var $author$project$PhotoGallery$Large = {$: 'Large'};
 var $author$project$PhotoGallery$Loading = {$: 'Loading'};
-var $author$project$PhotoGallery$initialModel = {activity: '', hue: 0, noise: 0, ripple: 0, size: $author$project$PhotoGallery$Large, state: $author$project$PhotoGallery$Loading};
+var $author$project$PhotoGallery$Medium = {$: 'Medium'};
+var $author$project$PhotoGallery$initialModel = {activity: '', chosenSize: $author$project$PhotoGallery$Medium, hue: 5, noise: 5, ripple: 5, status: $author$project$PhotoGallery$Loading};
 var $author$project$PhotoGallery$init = function (flags) {
-	var activity = 'Initializing Pasta ' + $elm$core$String$fromFloat(flags);
+	var activity = 'Initializing Pasta v' + $elm$core$String$fromFloat(flags);
 	return _Utils_Tuple2(
 		_Utils_update(
 			$author$project$PhotoGallery$initialModel,
@@ -6954,13 +6954,16 @@ var $author$project$PhotoFolders$update = F2(
 				}
 		}
 	});
+var $author$project$PhotoGallery$Errored = function (a) {
+	return {$: 'Errored', a: a};
+};
+var $author$project$PhotoGallery$GotRandomPhoto = function (a) {
+	return {$: 'GotRandomPhoto', a: a};
+};
 var $author$project$PhotoGallery$Loaded = F2(
 	function (a, b) {
 		return {$: 'Loaded', a: a, b: b};
 	});
-var $author$project$PhotoGallery$ThumbnailRandomlyPicked = function (a) {
-	return {$: 'ThumbnailRandomlyPicked', a: a};
-};
 var $elm$json$Json$Encode$float = _Json_wrap;
 var $elm$json$Json$Encode$list = F2(
 	function (func, entries) {
@@ -7013,25 +7016,26 @@ var $author$project$PhotoGallery$setFilters = _Platform_outgoingPort(
 	});
 var $author$project$PhotoGallery$urlPrefix = 'http://elm-in-action.com/';
 var $author$project$PhotoGallery$applyFilters = function (model) {
-	var _v0 = model.state;
+	var _v0 = model.status;
 	switch (_v0.$) {
 		case 'Loaded':
-			var selected = _v0.b;
+			var photos = _v0.a;
+			var selectedUrl = _v0.b;
+			var url = $author$project$PhotoGallery$urlPrefix + ('large/' + selectedUrl);
+			var filters = _List_fromArray(
+				[
+					{amount: model.hue / 11, name: 'Hue'},
+					{amount: model.ripple / 11, name: 'Ripple'},
+					{amount: model.noise / 11, name: 'Noise'}
+				]);
 			return _Utils_Tuple2(
 				model,
 				$author$project$PhotoGallery$setFilters(
-					{
-						filters: _List_fromArray(
-							[
-								{amount: model.hue / 11, name: 'Hue'},
-								{amount: model.ripple / 11, name: 'Ripple'},
-								{amount: model.noise / 11, name: 'Noise'}
-							]),
-						url: $author$project$PhotoGallery$urlPrefix + ('large/' + selected.fileName)
-					}));
+					{filters: filters, url: url}));
 		case 'Loading':
 			return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 		default:
+			var errorMessage = _v0.a;
 			return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 	}
 };
@@ -7142,30 +7146,31 @@ var $elm$random$Random$generate = F2(
 			$elm$random$Random$Generate(
 				A2($elm$random$Random$map, tagger, generator)));
 	});
-var $author$project$PhotoGallery$Errored = function (a) {
-	return {$: 'Errored', a: a};
+var $elm$core$List$head = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return $elm$core$Maybe$Just(x);
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
 };
-var $author$project$PhotoGallery$handleLoadedThumbnails = F2(
-	function (result, model) {
-		if ((result.$ === 'Ok') && result.a.b) {
-			var thumbnails = result.a;
-			var firstThumbnail = thumbnails.a;
-			return _Utils_update(
-				model,
-				{
-					state: A2($author$project$PhotoGallery$Loaded, thumbnails, firstThumbnail)
-				});
-		} else {
-			return _Utils_update(
-				model,
-				{
-					state: $author$project$PhotoGallery$Errored('Thumbnail loading failed')
-				});
-		}
-	});
 var $elm$core$Tuple$pair = F2(
 	function (a, b) {
 		return _Utils_Tuple2(a, b);
+	});
+var $author$project$PhotoGallery$selectUrl = F2(
+	function (url, status) {
+		switch (status.$) {
+			case 'Loaded':
+				var photos = status.a;
+				return A2($author$project$PhotoGallery$Loaded, photos, url);
+			case 'Loading':
+				return status;
+			default:
+				var errorMessage = status.a;
+				return status;
+		}
 	});
 var $elm$random$Random$addOne = function (value) {
 	return _Utils_Tuple2(1, value);
@@ -7251,95 +7256,120 @@ var $elm$random$Random$uniform = F2(
 			A2($elm$core$List$map, $elm$random$Random$addOne, valueList));
 	});
 var $author$project$PhotoGallery$update = F2(
-	function (message, model) {
-		var _v0 = _Utils_Tuple2(message, model.state);
-		_v0$9:
-		while (true) {
-			switch (_v0.a.$) {
-				case 'SizeChanged':
-					var size = _v0.a.a;
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{size: size}),
-						$elm$core$Platform$Cmd$none);
-				case 'LoadedThumbnails':
-					var result = _v0.a.a;
-					return $author$project$PhotoGallery$applyFilters(
-						A2($author$project$PhotoGallery$handleLoadedThumbnails, result, model));
-				case 'ThumbnailClicked':
-					if (_v0.b.$ === 'Loaded') {
-						var thumbnail = _v0.a.a;
-						var _v1 = _v0.b;
-						var thumbnails = _v1.a;
+	function (msg, model) {
+		switch (msg.$) {
+			case 'GotActivity':
+				var activity = msg.a;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{activity: activity}),
+					$elm$core$Platform$Cmd$none);
+			case 'GotRandomPhoto':
+				var photo = msg.a;
+				return $author$project$PhotoGallery$applyFilters(
+					_Utils_update(
+						model,
+						{
+							status: A2($author$project$PhotoGallery$selectUrl, photo.url, model.status)
+						}));
+			case 'ClickedPhoto':
+				var url = msg.a;
+				return $author$project$PhotoGallery$applyFilters(
+					_Utils_update(
+						model,
+						{
+							status: A2($author$project$PhotoGallery$selectUrl, url, model.status)
+						}));
+			case 'ClickedSize':
+				var size = msg.a;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{chosenSize: size}),
+					$elm$core$Platform$Cmd$none);
+			case 'ClickedSurpriseMe':
+				var _v1 = model.status;
+				switch (_v1.$) {
+					case 'Loaded':
+						if (_v1.a.b) {
+							var _v2 = _v1.a;
+							var firstPhoto = _v2.a;
+							var otherPhotos = _v2.b;
+							return A2(
+								$elm$core$Tuple$pair,
+								model,
+								A2(
+									$elm$random$Random$generate,
+									$author$project$PhotoGallery$GotRandomPhoto,
+									A2($elm$random$Random$uniform, firstPhoto, otherPhotos)));
+						} else {
+							return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+						}
+					case 'Loading':
+						return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+					default:
+						var errorMessage = _v1.a;
+						return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+				}
+			case 'GotPhotos':
+				if (msg.a.$ === 'Ok') {
+					var photos = msg.a.a;
+					if (photos.b) {
+						var first = photos.a;
+						var rest = photos.b;
 						return $author$project$PhotoGallery$applyFilters(
 							_Utils_update(
 								model,
 								{
-									state: A2($author$project$PhotoGallery$Loaded, thumbnails, thumbnail)
+									status: function () {
+										var _v4 = $elm$core$List$head(photos);
+										if (_v4.$ === 'Just') {
+											var photo = _v4.a;
+											return A2($author$project$PhotoGallery$Loaded, photos, photo.url);
+										} else {
+											return A2($author$project$PhotoGallery$Loaded, _List_Nil, '');
+										}
+									}()
 								}));
 					} else {
-						break _v0$9;
-					}
-				case 'SurpriseMeClicked':
-					if ((_v0.b.$ === 'Loaded') && _v0.b.a.b) {
-						var _v2 = _v0.a;
-						var _v3 = _v0.b;
-						var thumbnails = _v3.a;
-						var firstThumbnail = thumbnails.a;
-						var otherThumbnails = thumbnails.b;
-						return A2(
-							$elm$core$Tuple$pair,
-							model,
-							A2(
-								$elm$random$Random$generate,
-								$author$project$PhotoGallery$ThumbnailRandomlyPicked,
-								A2($elm$random$Random$uniform, firstThumbnail, thumbnails)));
-					} else {
-						break _v0$9;
-					}
-				case 'ThumbnailRandomlyPicked':
-					if (_v0.b.$ === 'Loaded') {
-						var thumbnail = _v0.a.a;
-						var _v4 = _v0.b;
-						var thumbnails = _v4.a;
-						return $author$project$PhotoGallery$applyFilters(
+						return _Utils_Tuple2(
 							_Utils_update(
 								model,
 								{
-									state: A2($author$project$PhotoGallery$Loaded, thumbnails, thumbnail)
-								}));
-					} else {
-						break _v0$9;
+									status: $author$project$PhotoGallery$Errored('0 photos found')
+								}),
+							$elm$core$Platform$Cmd$none);
 					}
-				case 'HueFilterUpdated':
-					var newValue = _v0.a.a;
-					return $author$project$PhotoGallery$applyFilters(
-						_Utils_update(
-							model,
-							{hue: newValue}));
-				case 'RippleFilterUpdated':
-					var newValue = _v0.a.a;
-					return $author$project$PhotoGallery$applyFilters(
-						_Utils_update(
-							model,
-							{ripple: newValue}));
-				case 'NoiseFilterUpdated':
-					var newValue = _v0.a.a;
-					return $author$project$PhotoGallery$applyFilters(
-						_Utils_update(
-							model,
-							{noise: newValue}));
-				default:
-					var activity = _v0.a.a;
+				} else {
+					var httpError = msg.a.a;
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
-							{activity: activity}),
+							{
+								status: $author$project$PhotoGallery$Errored('Server error!')
+							}),
 						$elm$core$Platform$Cmd$none);
-			}
+				}
+			case 'SlidHue':
+				var hue = msg.a;
+				return $author$project$PhotoGallery$applyFilters(
+					_Utils_update(
+						model,
+						{hue: hue}));
+			case 'SlidRipple':
+				var ripple = msg.a;
+				return $author$project$PhotoGallery$applyFilters(
+					_Utils_update(
+						model,
+						{ripple: ripple}));
+			default:
+				var noise = msg.a;
+				return $author$project$PhotoGallery$applyFilters(
+					_Utils_update(
+						model,
+						{noise: noise}));
 		}
-		return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 	});
 var $author$project$Main$update = F2(
 	function (msg, model) {
@@ -7639,22 +7669,24 @@ var $author$project$PhotoFolders$view = function (model) {
 					[selectedPhoto]))
 			]));
 };
-var $author$project$PhotoGallery$HueFilterUpdated = function (a) {
-	return {$: 'HueFilterUpdated', a: a};
+var $author$project$PhotoGallery$ClickedSurpriseMe = {$: 'ClickedSurpriseMe'};
+var $author$project$PhotoGallery$Large = {$: 'Large'};
+var $author$project$PhotoGallery$SlidHue = function (a) {
+	return {$: 'SlidHue', a: a};
 };
-var $author$project$PhotoGallery$Medium = {$: 'Medium'};
-var $author$project$PhotoGallery$NoiseFilterUpdated = function (a) {
-	return {$: 'NoiseFilterUpdated', a: a};
+var $author$project$PhotoGallery$SlidNoise = function (a) {
+	return {$: 'SlidNoise', a: a};
 };
-var $author$project$PhotoGallery$RippleFilterUpdated = function (a) {
-	return {$: 'RippleFilterUpdated', a: a};
+var $author$project$PhotoGallery$SlidRipple = function (a) {
+	return {$: 'SlidRipple', a: a};
 };
 var $author$project$PhotoGallery$Small = {$: 'Small'};
-var $author$project$PhotoGallery$SurpriseMeClicked = {$: 'SurpriseMeClicked'};
 var $elm$html$Html$button = _VirtualDom_node('button');
 var $elm$html$Html$canvas = _VirtualDom_node('canvas');
+var $elm$html$Html$h1 = _VirtualDom_node('h1');
 var $elm$html$Html$Attributes$id = $elm$html$Html$Attributes$stringProperty('id');
-var $author$project$PhotoGallery$showSize = function (size) {
+var $elm$html$Html$p = _VirtualDom_node('p');
+var $author$project$PhotoGallery$sizeToString = function (size) {
 	switch (size.$) {
 		case 'Small':
 			return 'small';
@@ -7670,17 +7702,17 @@ var $elm$json$Json$Decode$at = F2(
 	function (fields, decoder) {
 		return A3($elm$core$List$foldr, $elm$json$Json$Decode$field, decoder, fields);
 	});
-var $author$project$PhotoGallery$onSlide = function (slideEventMapper) {
+var $author$project$PhotoGallery$onSlide = function (toMsg) {
 	return A2(
 		$elm$html$Html$Events$on,
 		'slide',
 		A2(
 			$elm$json$Json$Decode$map,
-			slideEventMapper,
+			toMsg,
 			A2(
 				$elm$json$Json$Decode$at,
 				_List_fromArray(
-					['detail', 'slidTo']),
+					['detail', 'userSlidTo']),
 				$elm$json$Json$Decode$int)));
 };
 var $elm$virtual_dom$VirtualDom$property = F2(
@@ -7701,7 +7733,7 @@ var $author$project$PhotoGallery$rangeSlider = F2(
 		return A3($elm$html$Html$node, 'range-slider', attributes, children);
 	});
 var $author$project$PhotoGallery$viewFilter = F3(
-	function (slideEventMapper, name, magnitude) {
+	function (toMsg, name, magnitude) {
 		return A2(
 			$elm$html$Html$div,
 			_List_fromArray(
@@ -7726,7 +7758,7 @@ var $author$project$PhotoGallery$viewFilter = F3(
 							$elm$html$Html$Attributes$property,
 							'val',
 							$elm$json$Json$Encode$int(magnitude)),
-							$author$project$PhotoGallery$onSlide(slideEventMapper)
+							$author$project$PhotoGallery$onSlide(toMsg)
 						]),
 					_List_Nil),
 					A2(
@@ -7739,60 +7771,34 @@ var $author$project$PhotoGallery$viewFilter = F3(
 						]))
 				]));
 	});
-var $author$project$PhotoGallery$SizeChanged = function (a) {
-	return {$: 'SizeChanged', a: a};
+var $author$project$PhotoGallery$ClickedSize = function (a) {
+	return {$: 'ClickedSize', a: a};
 };
-var $elm$json$Json$Encode$bool = _Json_wrap;
-var $elm$html$Html$Attributes$boolProperty = F2(
-	function (key, bool) {
-		return A2(
-			_VirtualDom_property,
-			key,
-			$elm$json$Json$Encode$bool(bool));
-	});
-var $elm$html$Html$Attributes$checked = $elm$html$Html$Attributes$boolProperty('checked');
 var $elm$html$Html$input = _VirtualDom_node('input');
 var $elm$html$Html$Attributes$name = $elm$html$Html$Attributes$stringProperty('name');
-var $elm$json$Json$Decode$bool = _Json_decodeBool;
-var $elm$html$Html$Events$targetChecked = A2(
-	$elm$json$Json$Decode$at,
-	_List_fromArray(
-		['target', 'checked']),
-	$elm$json$Json$Decode$bool);
-var $elm$html$Html$Events$onCheck = function (tagger) {
-	return A2(
-		$elm$html$Html$Events$on,
-		'change',
-		A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetChecked));
-};
 var $elm$html$Html$Attributes$type_ = $elm$html$Html$Attributes$stringProperty('type');
-var $author$project$PhotoGallery$viewSizeChooser = F2(
-	function (selectedSize, size) {
-		return A2(
-			$elm$html$Html$label,
-			_List_Nil,
-			_List_fromArray(
-				[
-					A2(
-					$elm$html$Html$input,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$type_('radio'),
-							$elm$html$Html$Attributes$name('size'),
-							$elm$html$Html$Events$onCheck(
-							function (checked) {
-								return checked ? $author$project$PhotoGallery$SizeChanged(size) : $author$project$PhotoGallery$SizeChanged(selectedSize);
-							}),
-							$elm$html$Html$Attributes$checked(
-							_Utils_eq(selectedSize, size))
-						]),
-					_List_Nil),
-					$elm$html$Html$text(
-					$author$project$PhotoGallery$showSize(size))
-				]));
-	});
-var $author$project$PhotoGallery$ThumbnailClicked = function (a) {
-	return {$: 'ThumbnailClicked', a: a};
+var $author$project$PhotoGallery$viewSizeChooser = function (size) {
+	return A2(
+		$elm$html$Html$label,
+		_List_Nil,
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$input,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$type_('radio'),
+						$elm$html$Html$Attributes$name('size'),
+						$elm$html$Html$Events$onClick(
+						$author$project$PhotoGallery$ClickedSize(size))
+					]),
+				_List_Nil),
+				$elm$html$Html$text(
+				$author$project$PhotoGallery$sizeToString(size))
+			]));
+};
+var $author$project$PhotoGallery$ClickedPhoto = function (a) {
+	return {$: 'ClickedPhoto', a: a};
 };
 var $elm$core$List$filter = F2(
 	function (isGood, list) {
@@ -7821,36 +7827,50 @@ var $elm$html$Html$Attributes$classList = function (classes) {
 };
 var $elm$html$Html$Attributes$title = $elm$html$Html$Attributes$stringProperty('title');
 var $author$project$PhotoGallery$viewThumbnail = F2(
-	function (selectedThumbnail, thumbnail) {
+	function (selectedUrl, thumb) {
 		return A2(
 			$elm$html$Html$img,
 			_List_fromArray(
 				[
 					$elm$html$Html$Attributes$src(
-					_Utils_ap($author$project$PhotoGallery$urlPrefix, thumbnail.fileName)),
+					_Utils_ap($author$project$PhotoGallery$urlPrefix, thumb.url)),
 					$elm$html$Html$Attributes$title(
-					thumbnail.title + (' [' + ($elm$core$String$fromInt(thumbnail.size) + ' KB]'))),
+					thumb.title + (' [' + ($elm$core$String$fromInt(thumb.size) + ' KB]'))),
 					$elm$html$Html$Attributes$classList(
 					_List_fromArray(
 						[
 							_Utils_Tuple2(
 							'selected',
-							_Utils_eq(selectedThumbnail, thumbnail))
+							_Utils_eq(selectedUrl, thumb.url))
 						])),
 					$elm$html$Html$Events$onClick(
-					$author$project$PhotoGallery$ThumbnailClicked(thumbnail))
+					$author$project$PhotoGallery$ClickedPhoto(thumb.url))
 				]),
 			_List_Nil);
 	});
 var $author$project$PhotoGallery$viewLoaded = F3(
-	function (thumbnails, selected, model) {
+	function (photos, selectedUrl, model) {
 		return _List_fromArray(
 			[
+				A2(
+				$elm$html$Html$h1,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Photo Groove')
+					])),
+				A2(
+				$elm$html$Html$p,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text(model.activity)
+					])),
 				A2(
 				$elm$html$Html$button,
 				_List_fromArray(
 					[
-						$elm$html$Html$Events$onClick($author$project$PhotoGallery$SurpriseMeClicked)
+						$elm$html$Html$Events$onClick($author$project$PhotoGallery$ClickedSurpriseMe)
 					]),
 				_List_fromArray(
 					[
@@ -7864,19 +7884,16 @@ var $author$project$PhotoGallery$viewLoaded = F3(
 					]),
 				_List_fromArray(
 					[
-						A3($author$project$PhotoGallery$viewFilter, $author$project$PhotoGallery$HueFilterUpdated, 'Hue', model.hue),
-						A3($author$project$PhotoGallery$viewFilter, $author$project$PhotoGallery$RippleFilterUpdated, 'Ripple', model.ripple),
-						A3($author$project$PhotoGallery$viewFilter, $author$project$PhotoGallery$NoiseFilterUpdated, 'Noise', model.noise)
+						A3($author$project$PhotoGallery$viewFilter, $author$project$PhotoGallery$SlidHue, 'Hue', model.hue),
+						A3($author$project$PhotoGallery$viewFilter, $author$project$PhotoGallery$SlidRipple, 'Ripple', model.ripple),
+						A3($author$project$PhotoGallery$viewFilter, $author$project$PhotoGallery$SlidNoise, 'Noise', model.noise)
 					])),
 				A2(
-				$elm$html$Html$div,
+				$elm$html$Html$h3,
+				_List_Nil,
 				_List_fromArray(
 					[
-						$elm$html$Html$Attributes$class('activity')
-					]),
-				_List_fromArray(
-					[
-						$elm$html$Html$text(model.activity)
+						$elm$html$Html$text('Thumbnail Size:')
 					])),
 				A2(
 				$elm$html$Html$div,
@@ -7886,7 +7903,7 @@ var $author$project$PhotoGallery$viewLoaded = F3(
 					]),
 				A2(
 					$elm$core$List$map,
-					$author$project$PhotoGallery$viewSizeChooser(model.size),
+					$author$project$PhotoGallery$viewSizeChooser,
 					_List_fromArray(
 						[$author$project$PhotoGallery$Small, $author$project$PhotoGallery$Medium, $author$project$PhotoGallery$Large]))),
 				A2(
@@ -7895,12 +7912,12 @@ var $author$project$PhotoGallery$viewLoaded = F3(
 					[
 						$elm$html$Html$Attributes$id('thumbnails'),
 						$elm$html$Html$Attributes$class(
-						$author$project$PhotoGallery$showSize(model.size))
+						$author$project$PhotoGallery$sizeToString(model.chosenSize))
 					]),
 				A2(
 					$elm$core$List$map,
-					$author$project$PhotoGallery$viewThumbnail(selected),
-					thumbnails)),
+					$author$project$PhotoGallery$viewThumbnail(selectedUrl),
+					photos)),
 				A2(
 				$elm$html$Html$canvas,
 				_List_fromArray(
@@ -7919,19 +7936,19 @@ var $author$project$PhotoGallery$view = function (model) {
 				$elm$html$Html$Attributes$class('content')
 			]),
 		function () {
-			var _v0 = model.state;
+			var _v0 = model.status;
 			switch (_v0.$) {
 				case 'Loaded':
-					var thumbnails = _v0.a;
-					var selected = _v0.b;
-					return A3($author$project$PhotoGallery$viewLoaded, thumbnails, selected, model);
+					var photos = _v0.a;
+					var selectedUrl = _v0.b;
+					return A3($author$project$PhotoGallery$viewLoaded, photos, selectedUrl, model);
 				case 'Loading':
 					return _List_Nil;
 				default:
-					var error = _v0.a;
+					var errorMessage = _v0.a;
 					return _List_fromArray(
 						[
-							$elm$html$Html$text('Error: ' + error)
+							$elm$html$Html$text('Error: ' + errorMessage)
 						]);
 			}
 		}());
@@ -7944,7 +7961,6 @@ var $author$project$Main$viewFooter = A2(
 		[
 			$elm$html$Html$text('One is never alone with a rubber duck. -Douglas Adams')
 		]));
-var $elm$html$Html$h1 = _VirtualDom_node('h1');
 var $author$project$Main$isActive = function (_v0) {
 	var link = _v0.link;
 	var page = _v0.page;
