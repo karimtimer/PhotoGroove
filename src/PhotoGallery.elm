@@ -1,4 +1,4 @@
-port module PhotoGallery exposing (Model, Msg(..), Photo, Status(..), init, initialModel, main, photoDecoder, subscriptions, update, urlPrefix, view)
+port module PhotoGallery exposing (..)
 
 import Array exposing (Array)
 import Browser
@@ -10,6 +10,12 @@ import Json.Decode exposing (Decoder, at, int, list, string, succeed)
 import Json.Decode.Pipeline exposing (optional, required)
 import Json.Encode as Encode
 import Random
+
+
+port setFilters : FilterOptions -> Cmd msg
+
+
+port activityChanges : (String -> msg) -> Sub msg
 
 
 urlPrefix : String
@@ -59,8 +65,12 @@ viewFilter toMsg name magnitude =
 
 viewLoaded : List Photo -> String -> Model -> List (Html Msg)
 viewLoaded photos selectedUrl model =
-    [ button [ onClick ClickedSurpriseMe ] [ text "Surprise Me!" ]
-    , div [ class "activity" ] [ text model.activity ]
+    [ h1 [] [ text "Photo Groove" ]
+    , p []
+        [ text model.activity ]
+    , button
+        [ onClick ClickedSurpriseMe ]
+        [ text "Surprise Me!" ]
     , div [ class "filters" ]
         [ viewFilter SlidHue "Hue" model.hue
         , viewFilter SlidRipple "Ripple" model.ripple
@@ -105,12 +115,6 @@ sizeToString size =
 
         Large ->
             "large"
-
-
-port setFilters : FilterOptions -> Cmd msg
-
-
-port activityChanges : (String -> msg) -> Sub msg
 
 
 type alias FilterOptions =

@@ -6389,6 +6389,7 @@ var $author$project$PhotoFolders$modelDecoder = A3(
 		}),
 	$author$project$PhotoFolders$modelPhotosDecoder,
 	$author$project$PhotoFolders$folderDecoder);
+var $author$project$PhotoFolders$urlPrefix = 'http://elm-in-action.com/';
 var $author$project$PhotoFolders$init = function (selectedFilename) {
 	return _Utils_Tuple2(
 		_Utils_update(
@@ -6397,7 +6398,7 @@ var $author$project$PhotoFolders$init = function (selectedFilename) {
 		$elm$http$Http$get(
 			{
 				expect: A2($elm$http$Http$expectJson, $author$project$PhotoFolders$GotInitialModel, $author$project$PhotoFolders$modelDecoder),
-				url: 'http://elm-in-action.com/folders/list'
+				url: $author$project$PhotoFolders$urlPrefix + 'folders/list'
 			}));
 };
 var $elm$core$String$fromFloat = _String_fromNumber;
@@ -6798,13 +6799,13 @@ var $author$project$Main$GotGalleryMsg = function (a) {
 };
 var $author$project$Main$toGallery = F2(
 	function (model, _v0) {
-		var folders = _v0.a;
+		var gallery = _v0.a;
 		var cmd = _v0.b;
 		return _Utils_Tuple2(
 			_Utils_update(
 				model,
 				{
-					page: $author$project$Main$GalleryPage(folders)
+					page: $author$project$Main$GalleryPage(gallery)
 				}),
 			A2($elm$core$Platform$Cmd$map, $author$project$Main$GotGalleryMsg, cmd));
 	});
@@ -6943,7 +6944,11 @@ var $author$project$PhotoFolders$update = F2(
 			default:
 				if (msg.a.$ === 'Ok') {
 					var newModel = msg.a.a;
-					return _Utils_Tuple2(newModel, $elm$core$Platform$Cmd$none);
+					return _Utils_Tuple2(
+						_Utils_update(
+							newModel,
+							{selectedPhotoUrl: model.selectedPhotoUrl}),
+						$elm$core$Platform$Cmd$none);
 				} else {
 					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 				}
@@ -7439,7 +7444,6 @@ var $elm$html$Html$Attributes$stringProperty = F2(
 	});
 var $elm$html$Html$Attributes$class = $elm$html$Html$Attributes$stringProperty('className');
 var $elm$html$Html$div = _VirtualDom_node('div');
-var $elm$html$Html$h1 = _VirtualDom_node('h1');
 var $author$project$PhotoFolders$ClickedFolder = function (a) {
 	return {$: 'ClickedFolder', a: a};
 };
@@ -7478,17 +7482,20 @@ var $elm$html$Html$Events$onClick = function (msg) {
 		'click',
 		$elm$json$Json$Decode$succeed(msg));
 };
-var $author$project$PhotoFolders$ClickedPhoto = function (a) {
-	return {$: 'ClickedPhoto', a: a};
+var $elm$html$Html$a = _VirtualDom_node('a');
+var $elm$html$Html$Attributes$href = function (url) {
+	return A2(
+		$elm$html$Html$Attributes$stringProperty,
+		'href',
+		_VirtualDom_noJavaScriptUri(url));
 };
 var $author$project$PhotoFolders$viewPhoto = function (url) {
 	return A2(
-		$elm$html$Html$div,
+		$elm$html$Html$a,
 		_List_fromArray(
 			[
-				$elm$html$Html$Attributes$class('photo'),
-				$elm$html$Html$Events$onClick(
-				$author$project$PhotoFolders$ClickedPhoto(url))
+				$elm$html$Html$Attributes$href('/photos/' + url),
+				$elm$html$Html$Attributes$class('photo')
 			]),
 		_List_fromArray(
 			[
@@ -7559,7 +7566,9 @@ var $elm$html$Html$Attributes$src = function (url) {
 		'src',
 		_VirtualDom_noJavaScriptOrHtmlUri(url));
 };
-var $author$project$PhotoFolders$urlPrefix = 'http://elm-in-action.com/';
+var $author$project$PhotoFolders$ClickedPhoto = function (a) {
+	return {$: 'ClickedPhoto', a: a};
+};
 var $author$project$PhotoFolders$viewRelatedPhoto = function (url) {
 	return A2(
 		$elm$html$Html$img,
@@ -7648,13 +7657,6 @@ var $author$project$PhotoFolders$view = function (model) {
 					]),
 				_List_fromArray(
 					[
-						A2(
-						$elm$html$Html$h1,
-						_List_Nil,
-						_List_fromArray(
-							[
-								$elm$html$Html$text('Folders')
-							])),
 						A2($author$project$PhotoFolders$viewFolder, $author$project$PhotoFolders$End, model.root)
 					])),
 				A2(
@@ -7681,7 +7683,9 @@ var $author$project$PhotoGallery$SlidRipple = function (a) {
 var $author$project$PhotoGallery$Small = {$: 'Small'};
 var $elm$html$Html$button = _VirtualDom_node('button');
 var $elm$html$Html$canvas = _VirtualDom_node('canvas');
+var $elm$html$Html$h1 = _VirtualDom_node('h1');
 var $elm$html$Html$Attributes$id = $elm$html$Html$Attributes$stringProperty('id');
+var $elm$html$Html$p = _VirtualDom_node('p');
 var $author$project$PhotoGallery$sizeToString = function (size) {
 	switch (size.$) {
 		case 'Small':
@@ -7849,6 +7853,20 @@ var $author$project$PhotoGallery$viewLoaded = F3(
 		return _List_fromArray(
 			[
 				A2(
+				$elm$html$Html$h1,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Photo Groove')
+					])),
+				A2(
+				$elm$html$Html$p,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text(model.activity)
+					])),
+				A2(
 				$elm$html$Html$button,
 				_List_fromArray(
 					[
@@ -7857,16 +7875,6 @@ var $author$project$PhotoGallery$viewLoaded = F3(
 				_List_fromArray(
 					[
 						$elm$html$Html$text('Surprise Me!')
-					])),
-				A2(
-				$elm$html$Html$div,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('activity')
-					]),
-				_List_fromArray(
-					[
-						$elm$html$Html$text(model.activity)
 					])),
 				A2(
 				$elm$html$Html$div,
@@ -7953,13 +7961,6 @@ var $author$project$Main$viewFooter = A2(
 		[
 			$elm$html$Html$text('One is never alone with a rubber duck. -Douglas Adams')
 		]));
-var $elm$html$Html$a = _VirtualDom_node('a');
-var $elm$html$Html$Attributes$href = function (url) {
-	return A2(
-		$elm$html$Html$Attributes$stringProperty,
-		'href',
-		_VirtualDom_noJavaScriptUri(url));
-};
 var $author$project$Main$isActive = function (_v0) {
 	var link = _v0.link;
 	var page = _v0.page;
@@ -7988,9 +7989,9 @@ var $author$project$Main$isActive = function (_v0) {
 var $elm$html$Html$li = _VirtualDom_node('li');
 var $elm$html$Html$nav = _VirtualDom_node('nav');
 var $elm$html$Html$ul = _VirtualDom_node('ul');
-var $author$project$Main$viewHeader = function (page) {
+var $author$project$Main$viewHeader = function (currentPage) {
 	var navLink = F2(
-		function (route, _v0) {
+		function (targetRoute, _v0) {
 			var url = _v0.url;
 			var caption = _v0.caption;
 			return A2(
@@ -8003,7 +8004,7 @@ var $author$project$Main$viewHeader = function (page) {
 								_Utils_Tuple2(
 								'active',
 								$author$project$Main$isActive(
-									{link: route, page: page}))
+									{link: targetRoute, page: currentPage}))
 							]))
 					]),
 				_List_fromArray(
